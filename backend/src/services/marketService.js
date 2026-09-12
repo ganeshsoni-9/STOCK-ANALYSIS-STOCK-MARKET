@@ -27,6 +27,7 @@ class MarketService {
       sectors
     });
 
+    const mode = process.env.MARKET_DATA_MODE || 'mock';
     const overview = {
       marketStatus,
       indices,
@@ -40,7 +41,7 @@ class MarketService {
       topBearish: scannerData.topBearish,
       dataFreshness: {
         timestamp: Date.now(),
-        source: process.env.MARKET_DATA_MODE === 'live' ? process.env.BROKER_PROVIDER : 'mock',
+        source: mode !== 'mock' ? (process.env.BROKER_PROVIDER || mode) : 'mock',
         isLive: true
       }
     };

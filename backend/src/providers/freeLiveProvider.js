@@ -80,8 +80,9 @@ class FreeLiveProvider extends MarketDataProvider {
       const prevClose = Number(meta.chartPreviousClose.toFixed(2));
       const change = Number((ltp - prevClose).toFixed(2));
       const changePercent = Number((((ltp - prevClose) / prevClose) * 100).toFixed(2));
-      const high = Number((meta.dayHigh || ltp * 1.005).toFixed(2));
-      const low = Number((meta.dayLow || ltp * 0.995).toFixed(2));
+      const openPrice = meta.regularMarketOpen ?? meta.chartPreviousClose ?? ltp;
+      const high = Number(((meta.regularMarketDayHigh ?? meta.dayHigh) || ltp * 1.005).toFixed(2));
+      const low = Number(((meta.regularMarketDayLow ?? meta.dayLow) || ltp * 0.995).toFixed(2));
       const volume = meta.regularMarketVolume || 1000000;
 
       const inst = {
@@ -91,7 +92,7 @@ class FreeLiveProvider extends MarketDataProvider {
         exchange: 'NSE',
         isIndex,
         ltp,
-        open: Number((meta.regularMarketDayHigh || ltp).toFixed(2)),
+        open: Number(openPrice.toFixed(2)),
         high,
         low,
         previousClose: prevClose,
@@ -204,6 +205,7 @@ class FreeLiveProvider extends MarketDataProvider {
     const ltp = inst.ltp;
     return {
       symbol: inst.symbol,
+      isSynthetic: true,
       bids: [
         { price: Number((ltp - 0.15).toFixed(2)), quantity: 500, orders: 4 },
         { price: Number((ltp - 0.30).toFixed(2)), quantity: 1200, orders: 8 }
