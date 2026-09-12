@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#0B0F17] text-gray-100 font-sans antialiased selection:bg-emerald-500 selection:text-black min-h-screen overflow-x-hidden;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0F17;
+}
+::-webkit-scrollbar-thumb {
+  background: #1F293D;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Glassmorphism Card Style */
+.glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+}
+
+.glass-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+.glass-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Glowing Accent Badges */
+.badge-bullish {
+  @apply bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 font-semibold px-2.5 py-0.5 rounded text-xs inline-flex items-center gap-1;
+}
+
+.badge-bearish {
+  @apply bg-rose-950/80 text-rose-400 border border-rose-500/30 font-semibold px-2.5 py-0.5 rounded text-xs inline-flex items-center gap-1;
+}
+
+.badge-neutral {
+  @apply bg-amber-950/80 text-amber-400 border border-amber-500/30 font-semibold px-2.5 py-0.5 rounded text-xs inline-flex items-center gap-1;
+}
