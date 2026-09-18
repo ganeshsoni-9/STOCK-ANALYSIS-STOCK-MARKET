@@ -71,12 +71,16 @@ export default function Navbar({ isConnected = true, lastUpdated }) {
         {/* Brand & Connection Status */}
         <div className="flex items-center justify-between md:justify-start gap-4">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-sky-600 flex items-center justify-center font-black text-black text-lg shadow-lg shadow-emerald-500/20">
-              T
-            </div>
+            <div className="w-8 h-8 rounded-full overflow-hidden shadow-lg shadow-emerald-500/20">
+  <img
+    src="https://static.vecteezy.com/system/resources/thumbnails/079/859/474/small/buy-and-sell-buttons-with-bull-and-bear-on-stock-market-chart-on-a-transparent-background-png.png"
+    alt="Bull Bear Stock Market"
+    className="w-full h-full object-cover"
+  />
+</div>
             <div>
               <span className="font-extrabold text-base tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-                TradeSense <span className="text-emerald-400">AI</span>
+                SONI TRADESENSE FOR STOCKS <span className="text-emerald-400"></span>
               </span>
               <div className="text-[10px] text-slate-400 font-mono tracking-wider uppercase leading-none">
                 Indian Market Scanner
