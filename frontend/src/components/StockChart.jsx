@@ -10,9 +10,12 @@ import {
   CartesianGrid,
   ReferenceLine
 } from 'recharts';
+import { TrendingUp, CandlestickChart as CandlestickIcon } from 'lucide-react';
+import CandlestickChart from './CandlestickChart';
 
 export default function StockChart({ series = [], symbol = '', timeframe = '5m', onTimeframeChange }) {
   const [activeTab, setActiveTab] = useState('price'); // price | rsi | macd
+  const [chartMode, setChartMode] = useState('line'); // line | candles
 
   if (!series || series.length === 0) {
     return <div className="glass-card p-6 text-center text-slate-400">Loading chart data...</div>;
@@ -20,31 +23,64 @@ export default function StockChart({ series = [], symbol = '', timeframe = '5m',
 
   const formattedData = series.map((c) => ({
     ...c,
-    time: new Date(c.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    time: c.timestamp ? new Date(c.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
   }));
 
   const timeframes = ['1m', '3m', '5m', '15m', '30m'];
 
   return (
     <div className="glass-card p-4 space-y-3">
-      {/* Timeframe & Subchart Controls */}
+      {/* Timeframe & View Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
-          {timeframes.map((tf) => (
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Timeframe Buttons */}
+          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                onClick={() => onTimeframeChange && onTimeframeChange(tf)}
+                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition ${
+                  timeframe === tf
+                    ? 'bg-emerald-500 text-black font-bold'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tf.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          {/* Line / Candles View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
             <button
-              key={tf}
-              onClick={() => onTimeframeChange && onTimeframeChange(tf)}
-              className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition ${
-                timeframe === tf
-                  ? 'bg-emerald-500 text-black font-bold'
-                  : 'text-slate-400 hover:text-white'
+              onClick={() => setChartMode('line')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium transition ${
+                chartMode === 'line'
+                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 font-bold'
+                  : 'text-slate-400 hover:text-white border border-transparent'
               }`}
+              title="Line Chart"
             >
-              {tf.toUpperCase()}
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Line</span>
             </button>
-          ))}
+
+            <button
+              onClick={() => setChartMode('candles')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium transition ${
+                chartMode === 'candles'
+                  ? 'bg-slate-800 text-emerald-400 border border-slate-700 font-bold'
+                  : 'text-slate-400 hover:text-white border border-transparent'
+              }`}
+              title="Candlestick Chart"
+            >
+              <CandlestickIcon className="w-3.5 h-3.5" />
+              <span>Candles</span>
+            </button>
+          </div>
         </div>
 
+        {/* Subchart Indicator Switcher */}
         <div className="flex items-center gap-1 text-xs font-mono">
           <button
             onClick={() => setActiveTab('price')}
@@ -82,30 +118,40 @@ export default function StockChart({ series = [], symbol = '', timeframe = '5m',
       {/* Main Chart Rendering */}
       {activeTab === 'price' && (
         <div>
-          <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 mb-2">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-emerald-400"></span> Close</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-amber-400"></span> VWAP</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-sky-400"></span> EMA 9</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-purple-400"></span> EMA 20</span>
-          </div>
+          {chartMode === 'line' ? (
+            <>
+              <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 mb-2">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-emerald-400"></span> Close</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-amber-400"></span> VWAP</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-sky-400"></span> EMA 9</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-purple-400"></span> EMA 20</span>
+              </div>
 
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={formattedData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1F293D" />
-                <XAxis dataKey="time" stroke="#64748B" fontSize={11} />
-                <YAxis domain={['auto', 'auto']} stroke="#64748B" fontSize={11} orientation="right" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                />
-                <Line type="monotone" dataKey="close" stroke="#10B981" strokeWidth={2} dot={false} name="Close" />
-                <Line type="monotone" dataKey="vwap" stroke="#F59E0B" strokeWidth={1.5} dot={false} name="VWAP" />
-                <Line type="monotone" dataKey="ema9" stroke="#38BDF8" strokeWidth={1} dot={false} name="EMA 9" />
-                <Line type="monotone" dataKey="ema20" stroke="#C084FC" strokeWidth={1} dot={false} name="EMA 20" />
-                <Bar dataKey="volume" fill="#1E293B" yAxisId="vol" opacity={0.3} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={formattedData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1F293D" />
+                    <XAxis dataKey="time" stroke="#64748B" fontSize={11} />
+                    <YAxis domain={['auto', 'auto']} stroke="#64748B" fontSize={11} orientation="right" />
+                    <YAxis yAxisId="vol" orientation="left" hide domain={[0, (max) => max * 4]} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
+                    />
+                    <Line type="monotone" dataKey="close" stroke="#10B981" strokeWidth={2} dot={false} name="Close" />
+                    <Line type="monotone" dataKey="vwap" stroke="#F59E0B" strokeWidth={1.5} dot={false} name="VWAP" />
+                    <Line type="monotone" dataKey="ema9" stroke="#38BDF8" strokeWidth={1} dot={false} name="EMA 9" />
+                    <Line type="monotone" dataKey="ema20" stroke="#C084FC" strokeWidth={1} dot={false} name="EMA 20" />
+                    <Bar dataKey="volume" fill="#1E293B" yAxisId="vol" opacity={0.3} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          ) : (
+            /* Lightweight-Charts TradingView Professional Candlestick View */
+            <div className="h-[280px] w-full">
+              <CandlestickChart series={series} height={280} />
+            </div>
+          )}
         </div>
       )}
 
@@ -144,3 +190,6 @@ export default function StockChart({ series = [], symbol = '', timeframe = '5m',
     </div>
   );
 }
+
+
+

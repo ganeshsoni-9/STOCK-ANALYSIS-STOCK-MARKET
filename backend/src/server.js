@@ -7,11 +7,13 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 
+const authRoutes = require('./routes/authRoutes');
 const marketRoutes = require('./routes/marketRoutes');
 const stockRoutes = require('./routes/stockRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const systemRoutes = require('./routes/systemRoutes');
+const optionChainRoutes = require('./routes/optionChainRoutes');
 const { initMarketSocket } = require('./sockets/marketSocket');
 
 const app = express();
@@ -19,7 +21,15 @@ const server = http.createServer(app);
 
 // Security Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://192.168.31.233:5173'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 
 // Global Rate Limiter
@@ -33,18 +43,21 @@ app.use('/api', apiLimiter);
 // Socket.IO Setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || '*',
-    methods: ['GET', 'POST']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 initMarketSocket(io);
 
 // REST API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/options', optionChainRoutes);
 
 // Root route
 app.get('/', (req, res) => {

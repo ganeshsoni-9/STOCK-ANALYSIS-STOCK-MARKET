@@ -9,6 +9,9 @@ import Watchlist from './pages/Watchlist';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 import AdminDebug from './pages/AdminDebug';
+import ChartTest from './pages/ChartTest';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 import { useMarketSocket } from './hooks/useMarketSocket';
 
 export default function App() {
@@ -25,10 +28,12 @@ export default function App() {
             <Route path="/market" element={<Market socketData={marketData} />} />
             <Route path="/scanner" element={<StockScanner />} />
             <Route path="/stock/:symbol" element={<StockDetails />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/watchlist" element={<ProtectedRoute><Watchlist /></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/debug" element={<AdminDebug isConnected={isConnected} />} />
+            <Route path="/test-chart" element={<ChartTest />} />
           </Routes>
         </main>
 

@@ -51,7 +51,7 @@ export default function Alerts() {
 
   return (
     <div className="space-y-4">
-      <DisclaimerBanner isDemoMode={true} />
+      <DisclaimerBanner isDemoMode={false} />
 
       <div className="glass-card p-4">
         <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2 mb-1">

@@ -1,6 +1,3 @@
-/**
- * Abstract Base Class / Interface for Market Data Providers
- */
 class MarketDataProvider {
   constructor(providerName = 'AbstractProvider') {
     this.name = providerName;

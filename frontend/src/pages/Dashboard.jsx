@@ -10,6 +10,7 @@ import { marketApi } from '../services/api';
 export default function Dashboard({ socketData }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('shockers'); // 'shockers' | 'all'
 
   useEffect(() => {
     if (socketData) {
@@ -71,12 +72,45 @@ export default function Dashboard({ socketData }) {
         />
       </div>
 
-      {/* Volume Shockers */}
-      <StockTable
-        stocks={data?.volumeShockers}
-        title="⚡ Volume Shockers (High RVOL)"
-        subtitle="Stocks experiencing elevated relative volume compared to 20-period baseline"
-      />
+      {/* Tab Switcher: Volume Shockers vs All Stocks */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-lg border border-slate-800 w-fit font-mono text-xs">
+          <button
+            onClick={() => setActiveTab('shockers')}
+            className={`px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 ${
+              activeTab === 'shockers'
+                ? 'bg-emerald-500 text-black shadow font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            ⚡ Volume Shockers
+          </button>
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 ${
+              activeTab === 'all'
+                ? 'bg-emerald-500 text-black shadow font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📊 All Monitored Stocks ({data?.allStocks?.length || 0})
+          </button>
+        </div>
+
+        {activeTab === 'shockers' ? (
+          <StockTable
+            stocks={data?.volumeShockers}
+            title="⚡ Volume Shockers (High RVOL)"
+            subtitle="Stocks experiencing elevated relative volume compared to 20-period baseline"
+          />
+        ) : (
+          <StockTable
+            stocks={data?.allStocks}
+            title="📊 All Monitored Instruments (Full List)"
+            subtitle="Complete list of all liquid NSE instruments with real intraday technical metrics"
+          />
+        )}
+      </div>
     </div>
   );
 }

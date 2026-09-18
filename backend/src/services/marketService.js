@@ -39,6 +39,7 @@ class MarketService {
       volumeShockers: scannerData.volumeShockers,
       topBullish: scannerData.topBullish,
       topBearish: scannerData.topBearish,
+      allStocks: scannerData.stocks,
       dataFreshness: {
         timestamp: Date.now(),
         source: mode !== 'mock' ? (process.env.BROKER_PROVIDER || mode) : 'mock',

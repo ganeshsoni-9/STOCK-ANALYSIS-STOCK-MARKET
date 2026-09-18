@@ -56,7 +56,8 @@ exports.getStockDetails = async (req, res) => {
   try {
     const { symbol } = req.params;
     const timeframe = req.query.timeframe || '5m';
-    const details = await stockScannerService.getStockDetails(symbol, timeframe);
+    const count = parseInt(req.query.count || '150', 10);
+    const details = await stockScannerService.getStockDetails(symbol, timeframe, count);
     res.json({ success: true, data: details });
   } catch (error) {
     res.status(404).json({ success: false, message: error.message });
@@ -67,7 +68,7 @@ exports.getCandles = async (req, res) => {
   try {
     const { symbol } = req.params;
     const timeframe = req.query.timeframe || '5m';
-    const count = parseInt(req.query.count || '60', 10);
+    const count = parseInt(req.query.count || '150', 10);
     const candles = await stockScannerService.provider.getHistoricalCandles(symbol, timeframe, count);
     res.json({ success: true, data: candles });
   } catch (error) {
@@ -79,7 +80,8 @@ exports.getAnalysis = async (req, res) => {
   try {
     const { symbol } = req.params;
     const timeframe = req.query.timeframe || '5m';
-    const details = await stockScannerService.getStockDetails(symbol, timeframe);
+    const count = parseInt(req.query.count || '150', 10);
+    const details = await stockScannerService.getStockDetails(symbol, timeframe, count);
     res.json({ success: true, data: { signalData: details.signalData, analysis: details.analysis } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Activity, Cpu, Sliders, Bell, Bookmark, LayoutDashboard, Radio } from 'lucide-react';
-import { stockApi } from '../services/api';
+import { Search, Activity, Cpu, Sliders, Bell, Bookmark, LayoutDashboard, Radio, LogIn, LogOut } from 'lucide-react';
 
 const POPULAR_SYMBOLS = ['RELIANCE', 'HDFCBANK', 'TCS', 'ICICIBANK', 'SBIN', 'INFY', 'BAJFINANCE', 'TATAMOTORS'];
 
@@ -13,6 +12,15 @@ export default function Navbar({ isConnected = true, lastUpdated }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [istTime, setIstTime] = useState('');
+
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token && token !== 'null' && token !== 'undefined';
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   // IST Clock
   useEffect(() => {
@@ -119,7 +127,7 @@ export default function Navbar({ isConnected = true, lastUpdated }) {
           )}
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs & Auth */}
         <nav className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           {navLinks.map((link) => {
             const Icon = link.icon;
@@ -139,6 +147,25 @@ export default function Navbar({ isConnected = true, lastUpdated }) {
               </Link>
             );
           })}
+
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-950/40 border border-rose-500/30 transition flex items-center gap-1.5 shrink-0 ml-1"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black transition flex items-center gap-1.5 shrink-0 ml-1"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              Sign In
+            </Link>
+          )}
         </nav>
       </div>
     </header>

@@ -10,10 +10,14 @@ export function useMarketSocket() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    const authOptions = (token && token !== 'null' && token !== 'undefined') ? { token } : {};
+
     const s = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      auth: authOptions
     });
 
     s.on('connect', () => {

@@ -108,10 +108,10 @@ class StockScannerService {
     };
   }
 
-  async getStockDetails(symbol, timeframe = '5m') {
+  async getStockDetails(symbol, timeframe = '5m', count = 150) {
     const quote = await this.provider.getQuote(symbol);
-    const candles = await this.provider.getHistoricalCandles(symbol, timeframe, 80);
-    const candles15M = await this.provider.getHistoricalCandles(symbol, '15m', 80);
+    const candles = await this.provider.getHistoricalCandles(symbol, timeframe, count);
+    const candles15M = await this.provider.getHistoricalCandles(symbol, '15m', count);
 
     const analysis = analyzeCandles(candles);
     const analysis15M = analyzeCandles(candles15M);

@@ -1,13 +1,12 @@
 const Watchlist = require('../models/Watchlist');
 const stockScannerService = require('../services/stockScannerService');
 
-const DEFAULT_USER_ID = 'default_guest';
-
 exports.getWatchlist = async (req, res) => {
   try {
-    let list = await Watchlist.findOne({ userId: DEFAULT_USER_ID });
+    const userId = req.user.id;
+    let list = await Watchlist.findOne({ userId });
     if (!list) {
-      list = await Watchlist.create({ userId: DEFAULT_USER_ID, symbols: ['RELIANCE', 'HDFCBANK', 'TCS', 'SBIN'] });
+      list = await Watchlist.create({ userId, symbols: ['RELIANCE', 'HDFCBANK', 'TCS', 'SBIN'] });
     }
 
     const allScanned = await stockScannerService.scanAllStocks('5m');
@@ -25,13 +24,14 @@ exports.getWatchlist = async (req, res) => {
 
 exports.addSymbol = async (req, res) => {
   try {
+    const userId = req.user.id;
     const { symbol } = req.body;
     if (!symbol) return res.status(400).json({ success: false, message: 'Symbol is required' });
 
     const symUpper = symbol.toUpperCase().trim();
-    let list = await Watchlist.findOne({ userId: DEFAULT_USER_ID });
+    let list = await Watchlist.findOne({ userId });
     if (!list) {
-      list = new Watchlist({ userId: DEFAULT_USER_ID, symbols: [] });
+      list = new Watchlist({ userId, symbols: [] });
     }
 
     if (!list.symbols.includes(symUpper)) {
@@ -47,10 +47,11 @@ exports.addSymbol = async (req, res) => {
 
 exports.removeSymbol = async (req, res) => {
   try {
+    const userId = req.user.id;
     const { symbol } = req.params;
     const symUpper = symbol.toUpperCase().trim();
 
-    let list = await Watchlist.findOne({ userId: DEFAULT_USER_ID });
+    let list = await Watchlist.findOne({ userId });
     if (list) {
       list.symbols = list.symbols.filter((s) => s !== symUpper);
       await list.save();
