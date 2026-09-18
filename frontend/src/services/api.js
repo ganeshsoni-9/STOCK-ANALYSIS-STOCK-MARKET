@@ -71,6 +71,9 @@ export const stockApi = {
   getAll: (timeframe = '5m') =>
     fetchApi(`/stocks?timeframe=${timeframe}`),
 
+  getOpenLow: (timeframe = '5m') =>
+    fetchApi(`/stocks/open-low?timeframe=${timeframe}`),
+
   getGainers: () =>
     fetchApi('/stocks/gainers'),
 

@@ -2,6 +2,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const optionChainService = require('../src/services/optionChainService');
 const { OptionChainProvider } = require('../src/providers/optionChainProvider');
+const { getMarketDataProvider } = require('../src/providers');
+
+
+const provider = getMarketDataProvider();
+if (provider && provider.timer) {
+  clearInterval(provider.timer);
+}
+
 
 test('Option Chain Capability Check', () => {
   assert.equal(optionChainService.isOptionChainSupported('RELIANCE'), true);

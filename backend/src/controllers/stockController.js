@@ -52,6 +52,24 @@ exports.getBearish = async (req, res) => {
   }
 };
 
+exports.getOpenLow = async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe || '5m';
+    const overview = await marketService.getMarketOverview();
+    const scanned = await stockScannerService.scanAllStocks(timeframe, overview.marketRegime);
+    const openLowStocks = scanned.openLowStocks || [];
+    res.json({
+      success: true,
+      count: openLowStocks.length,
+      data: openLowStocks,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 exports.getStockDetails = async (req, res) => {
   try {
     const { symbol } = req.params;

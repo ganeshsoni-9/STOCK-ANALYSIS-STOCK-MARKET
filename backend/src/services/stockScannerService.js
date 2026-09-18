@@ -4,6 +4,22 @@ const { synthesizeSignal } = require('../engines/signalEngine');
 const { computeSectorPerformance } = require('./sectorService');
 const { analyzeOpeningRange } = require('../utils/marketHours');
 
+function isOpenLowStock(stock) {
+  if (!stock) return false;
+
+  const openRaw = stock.open;
+  const lowRaw = stock.low;
+
+  if (openRaw == null || lowRaw == null) return false;
+
+  const open = Number(openRaw);
+  const low = Number(lowRaw);
+
+  if (!Number.isFinite(open) || !Number.isFinite(low)) return false;
+
+  return Math.abs(open - low) < 0.001;
+}
+
 class StockScannerService {
   constructor() {
     this.provider = getMarketDataProvider();
@@ -44,6 +60,8 @@ class StockScannerService {
           const orl = earlyCandles.length > 0 ? Math.min(...earlyCandles.map((c) => c.low)) : stock.low;
           const openingRange = analyzeOpeningRange(stock.ltp, orh, orl);
 
+          const isOpenLow = isOpenLowStock(stock);
+
           return {
             symbol: stock.symbol,
             companyName: stock.name,
@@ -77,6 +95,8 @@ class StockScannerService {
             reasons: signalData.reasons,
             riskReference: signalData.riskReference,
             openingRange,
+            isOpenLow,
+            status: isOpenLow ? 'OPEN = LOW' : undefined,
             timestamp: stock.timestamp || Date.now(),
             source: stock.source || 'mock',
             isLive: stock.isLive ?? true
@@ -96,6 +116,7 @@ class StockScannerService {
     const volumeShockers = [...validStocks].sort((a, b) => b.rvol - a.rvol).slice(0, 8);
     const topBullish = [...validStocks].sort((a, b) => b.bullishScore - a.bullishScore).slice(0, 8);
     const topBearish = [...validStocks].sort((a, b) => b.bearishScore - a.bearishScore).slice(0, 8);
+    const openLowStocks = validStocks.filter((s) => s.isOpenLow);
 
     return {
       stocks: validStocks,
@@ -104,8 +125,14 @@ class StockScannerService {
       volumeShockers,
       topBullish,
       topBearish,
+      openLowStocks,
       updatedAt: new Date().toISOString()
     };
+  }
+
+  async getOpenLowStocks(timeframe = '5m', marketRegime = {}) {
+    const scanned = await this.scanAllStocks(timeframe, marketRegime);
+    return scanned.openLowStocks;
   }
 
   async getStockDetails(symbol, timeframe = '5m', count = 150) {
@@ -150,4 +177,10 @@ class StockScannerService {
   }
 }
 
-module.exports = new StockScannerService();
+const instance = new StockScannerService();
+instance.StockScannerService = StockScannerService;
+instance.isOpenLowStock = isOpenLowStock;
+
+module.exports = instance;
+
+

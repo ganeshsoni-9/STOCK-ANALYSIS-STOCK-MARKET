@@ -7,6 +7,7 @@ router.get('/gainers', stockController.getGainers);
 router.get('/losers', stockController.getLosers);
 router.get('/bullish', stockController.getBullish);
 router.get('/bearish', stockController.getBearish);
+router.get('/open-low', stockController.getOpenLow);
 router.get('/:symbol', stockController.getStockDetails);
 router.get('/:symbol/candles', stockController.getCandles);
 router.get('/:symbol/analysis', stockController.getAnalysis);

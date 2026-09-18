@@ -20,7 +20,14 @@ import {
 import { watchlistApi } from '../services/api';
 import StockChartModal from './StockChartModal';
 
-export default function StockTable({ stocks = [], title = 'Stock Scanner', subtitle = '', onWatchlistChange }) {
+export default function StockTable({
+  stocks = [],
+  title = 'Stock Scanner',
+  subtitle = '',
+  onWatchlistChange,
+  isOpenLowMode = false,
+  emptyMessage = ''
+}) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,7 +37,7 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
 
   // Search & Sorting States
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState(null); // 'symbol' | 'ltp' | 'changePercent' | 'rvol' | 'distanceFromVWAP' | 'rsi' | 'bullishScore' | 'bearishScore'
+  const [sortField, setSortField] = useState(null); // 'symbol' | 'open' | 'low' | 'ltp' | 'changePercent' | 'volume' | 'rvol' | 'distanceFromVWAP' | 'rsi' | 'bullishScore' | 'bearishScore'
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' | 'desc'
   const [selectedChartStock, setSelectedChartStock] = useState(null);
 
@@ -116,6 +123,14 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
     }
   };
 
+  const formatVolume = (vol) => {
+    if (vol == null) return '—';
+    if (vol >= 10000000) return `${(vol / 10000000).toFixed(2)}Cr`;
+    if (vol >= 100000) return `${(vol / 100000).toFixed(1)}L`;
+    if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K`;
+    return vol.toLocaleString('en-IN');
+  };
+
   const getSignalBadge = (signal, score) => {
     let style = 'bg-slate-800 text-slate-300 border-slate-700';
     if (signal === 'STRONG BULLISH') style = 'bg-emerald-950 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-950';
@@ -138,7 +153,7 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const symMatch = stk.symbol?.toLowerCase().includes(q);
-    const nameMatch = stk.companyName?.toLowerCase().includes(q);
+    const nameMatch = stk.companyName?.toLowerCase().includes(q) || stk.name?.toLowerCase().includes(q);
     return symMatch || nameMatch;
   });
 
@@ -177,8 +192,14 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
     return (
       <div className="glass-card p-8 text-center text-slate-400 font-mono text-xs space-y-2">
         <Bookmark className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-        <div className="text-slate-300 font-bold">Your watchlist is empty</div>
-        <div>Your watchlist is empty. Add stocks to track them here.</div>
+        <div className="text-slate-300 font-bold">
+          {isOpenLowMode ? 'No Open = Low stocks found' : (emptyMessage || 'Your watchlist is empty')}
+        </div>
+        <div>
+          {isOpenLowMode
+            ? 'There are currently no stocks matching the Open = Low condition in the market feed.'
+            : (emptyMessage ? 'No items available at this time.' : 'Your watchlist is empty. Add stocks to track them here.')}
+        </div>
       </div>
     );
   }
@@ -203,10 +224,12 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Dynamic Counter */}
-          <span className="text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-            {sortedStocks.length === stocks.length
-              ? `${stocks.length} Instruments Monitored`
-              : `${sortedStocks.length} of ${stocks.length} Instruments`}
+          <span className="text-xs font-mono text-emerald-400 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg font-bold">
+            {isOpenLowMode
+              ? `Open = Low Stocks: ${sortedStocks.length}`
+              : (sortedStocks.length === stocks.length
+                  ? `${stocks.length} Instruments Monitored`
+                  : `${sortedStocks.length} of ${stocks.length} Instruments`)}
           </span>
 
           {/* Last Updated Timestamp */}
@@ -233,64 +256,107 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-300 border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] font-mono tracking-wider bg-slate-900/50">
-              <th
-                onClick={() => handleSort('symbol')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                Symbol / Company {renderSortIndicator('symbol')}
-              </th>
-              <th
-                onClick={() => handleSort('ltp')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                LTP (₹) {renderSortIndicator('ltp')}
-              </th>
-              <th
-                onClick={() => handleSort('changePercent')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                Change % {renderSortIndicator('changePercent')}
-              </th>
-              <th
-                onClick={() => handleSort('rvol')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                RVOL {renderSortIndicator('rvol')}
-              </th>
-              <th
-                onClick={() => handleSort('distanceFromVWAP')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                VWAP Dist {renderSortIndicator('distanceFromVWAP')}
-              </th>
-              <th
-                onClick={() => handleSort('rsi')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                RSI {renderSortIndicator('rsi')}
-              </th>
-              <th
-                onClick={() => handleSort('bullishScore')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                Bull Score {renderSortIndicator('bullishScore')}
-              </th>
-              <th
-                onClick={() => handleSort('bearishScore')}
-                className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
-              >
-                Bear Score {renderSortIndicator('bearishScore')}
-              </th>
-              <th className="py-2.5 px-3">Signal</th>
-              <th className="py-2.5 px-3 text-right">Watchlist / Chart</th>
-            </tr>
+            {isOpenLowMode ? (
+              <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] font-mono tracking-wider bg-slate-900/50">
+                <th
+                  onClick={() => handleSort('symbol')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Symbol / Stock Name {renderSortIndicator('symbol')}
+                </th>
+                <th
+                  onClick={() => handleSort('open')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Open (₹) {renderSortIndicator('open')}
+                </th>
+                <th
+                  onClick={() => handleSort('low')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Low (₹) {renderSortIndicator('low')}
+                </th>
+                <th
+                  onClick={() => handleSort('ltp')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  LTP (₹) {renderSortIndicator('ltp')}
+                </th>
+                <th
+                  onClick={() => handleSort('changePercent')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Change % {renderSortIndicator('changePercent')}
+                </th>
+                <th
+                  onClick={() => handleSort('volume')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Volume {renderSortIndicator('volume')}
+                </th>
+                <th className="py-2.5 px-3">Status</th>
+                <th className="py-2.5 px-3 text-right">Watchlist / Chart</th>
+              </tr>
+            ) : (
+              <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] font-mono tracking-wider bg-slate-900/50">
+                <th
+                  onClick={() => handleSort('symbol')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Symbol / Company {renderSortIndicator('symbol')}
+                </th>
+                <th
+                  onClick={() => handleSort('ltp')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  LTP (₹) {renderSortIndicator('ltp')}
+                </th>
+                <th
+                  onClick={() => handleSort('changePercent')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Change % {renderSortIndicator('changePercent')}
+                </th>
+                <th
+                  onClick={() => handleSort('rvol')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  RVOL {renderSortIndicator('rvol')}
+                </th>
+                <th
+                  onClick={() => handleSort('distanceFromVWAP')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  VWAP Dist {renderSortIndicator('distanceFromVWAP')}
+                </th>
+                <th
+                  onClick={() => handleSort('rsi')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  RSI {renderSortIndicator('rsi')}
+                </th>
+                <th
+                  onClick={() => handleSort('bullishScore')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Bull Score {renderSortIndicator('bullishScore')}
+                </th>
+                <th
+                  onClick={() => handleSort('bearishScore')}
+                  className="py-2.5 px-3 cursor-pointer hover:text-white group/col select-none"
+                >
+                  Bear Score {renderSortIndicator('bearishScore')}
+                </th>
+                <th className="py-2.5 px-3">Signal</th>
+                <th className="py-2.5 px-3 text-right">Watchlist / Chart</th>
+              </tr>
+            )}
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-mono">
             {sortedStocks.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-8 text-center text-slate-500 font-mono text-xs">
-                  No stocks match "{searchQuery}".
+                <td colSpan={isOpenLowMode ? 8 : 10} className="py-8 text-center text-slate-500 font-mono text-xs">
+                  {isOpenLowMode ? 'No Open = Low stocks found' : `No stocks match "${searchQuery}".`}
                 </td>
               </tr>
             ) : (
@@ -300,6 +366,120 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
                 const symUpper = stk.symbol ? stk.symbol.toUpperCase() : 'N/A';
                 const isInWatchlist = watchlistSymbols.includes(symUpper);
                 const isPending = loadingSymbol === symUpper;
+
+                if (isOpenLowMode) {
+                  return (
+                    <tr
+                      key={stk.symbol || idx}
+                      onClick={() => navigate(`/stock/${stk.symbol}`)}
+                      className="hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                    >
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-white group-hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                          {stk.symbol || '—'}
+                          {stk.conflicts && stk.conflicts.length > 0 && (
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-400" title={stk.conflicts[0]} />
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-sans truncate max-w-[140px]">
+                          {stk.companyName || stk.name || '—'}
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-emerald-300">
+                        {stk.open != null ? `₹${stk.open.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-emerald-300">
+                        {stk.low != null ? `₹${stk.low.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-slate-100">
+                        {stk.ltp != null ? `₹${stk.ltp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}
+                      </td>
+
+                      <td className={`py-3 px-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {stk.changePercent != null ? (
+                          <div className="flex items-center gap-0.5">
+                            {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                            {isPositive ? '+' : ''}{stk.changePercent}%
+                          </div>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3 text-slate-300">
+                        {formatVolume(stk.volume)}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span className="px-2.5 py-1 rounded text-xs font-mono font-bold border bg-emerald-950 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-950 inline-flex items-center gap-1">
+                          OPEN = LOW
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedChartStock(stk);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
+                            title={`View real technical chart for ${stk.symbol}`}
+                          >
+                            <LineChart className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={(e) => handleWatchlistToggle(e, stk.symbol)}
+                            disabled={isPending}
+                            className={`px-2 py-1 rounded text-[11px] font-mono font-semibold flex items-center gap-1 transition ${
+                              isInWatchlist
+                                ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40'
+                                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-emerald-500 hover:text-black hover:border-emerald-400'
+                            }`}
+                            title={isInWatchlist ? 'Click to remove from Watchlist' : 'Click to add to Watchlist'}
+                          >
+                            {isPending ? (
+                              <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
+                            ) : isInWatchlist ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="hidden sm:inline">In Watchlist</span>
+                              </>
+                            ) : (
+                              <>
+                                <Bookmark className="w-3 h-3 text-slate-400" />
+                                <span className="hidden sm:inline">Add</span>
+                              </>
+                            )}
+                          </button>
+
+                          {isInWatchlist && (
+                            <button
+                              onClick={(e) => handleWatchlistToggle(e, stk.symbol, 'remove')}
+                              disabled={isPending}
+                              className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition"
+                              title={`Remove ${stk.symbol} from Watchlist`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => navigate(`/stock/${stk.symbol}`)}
+                            className="text-slate-400 group-hover:text-white p-1 rounded hover:bg-slate-700"
+                            title="View Instrument Details"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
 
                 return (
                   <tr
@@ -462,4 +642,3 @@ export default function StockTable({ stocks = [], title = 'Stock Scanner', subti
     </div>
   );
 }
-
