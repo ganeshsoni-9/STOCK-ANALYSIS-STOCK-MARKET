@@ -23,8 +23,9 @@ const server = http.createServer(app);
 app.use(helmet({ contentSecurityPolicy: false }));
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://192.168.31.233:5173'
-];
+  'http://192.168.31.233:5173',
+  process.env.CLIENT_URL
+].filter(Boolean);
 
 app.use(cors({
   origin: allowedOrigins,
