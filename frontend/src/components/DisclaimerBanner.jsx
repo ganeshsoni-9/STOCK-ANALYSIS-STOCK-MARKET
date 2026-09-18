@@ -36,7 +36,12 @@ export default function DisclaimerBanner({ isDemoMode = false }) {
       <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-slate-200">Legal Disclaimer:</span> TradeSense AI is an educational and research-oriented market analysis platform. It does not provide guaranteed predictions, financial advice, investment advice, or guaranteed trading signals. Market conditions can change rapidly. Users are responsible for their own decisions.
+<span className="font-semibold text-slate-200">Legal Disclaimer:</span>{" "}
+TradeSense AI identifies potentially favorable market setups using real-time
+market data, technical analysis, and AI-powered insights. While our analysis
+can help users spot promising opportunities, market conditions are
+unpredictable and profits are never guaranteed. Always perform your own
+research and manage risk before making any trading decision.
         </div>
       </div>
     </div>
