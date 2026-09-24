@@ -1,4 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const hostname = window.location.hostname;
+
+const isLocal =
+  hostname === 'localhost' ||
+  hostname === '127.0.0.1' ||
+  hostname === '192.168.31.233' ||
+  hostname === '10.206.239.146';
+
+const API_BASE = isLocal
+  ? 'http://localhost:5000/api'
+  : 'https://stock-analysis-stock-market.onrender.com/api';
 
 export async function fetchApi(endpoint, options = {}) {
   try {
