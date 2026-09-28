@@ -8,7 +8,7 @@ const isLocal =
 
 const API_BASE = isLocal
   ? 'http://localhost:5000/api'
-  : 'https://stock-analysis-stock-market.onrender.com/api';
+  : 'https://stock-analysis-stock-market-k51i.onrender.com/api';
 
 export async function fetchApi(endpoint, options = {}) {
   try {
