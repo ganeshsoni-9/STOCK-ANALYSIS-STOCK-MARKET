@@ -1,14 +1,4 @@
-const hostname = window.location.hostname;
-
-const isLocal =
-  hostname === 'localhost' ||
-  hostname === '127.0.0.1' ||
-  hostname === '192.168.31.233' ||
-  hostname === '10.206.239.146';
-
-const API_BASE = isLocal
-  ? 'http://localhost:5000/api'
-  : 'https://stock-analysis-stock-market-k51i.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export async function fetchApi(endpoint, options = {}) {
   try {
@@ -19,7 +9,6 @@ export async function fetchApi(endpoint, options = {}) {
       ...options.headers
     };
 
-    // JWT token available ho to Authorization header bhejo
     if (token && token !== 'null' && token !== 'undefined') {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +21,6 @@ export async function fetchApi(endpoint, options = {}) {
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
 
-      // Token invalid or expired control
       if (res.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
