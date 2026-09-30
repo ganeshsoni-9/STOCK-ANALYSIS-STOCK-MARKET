@@ -21,14 +21,19 @@ export function useMarketSocket() {
     });
 
     s.on('connect', () => {
-      console.log('[SocketHook] Connected to real-time market feed');
-      setIsConnected(true);
-    });
+  console.log('[SocketHook] Connected to real-time market feed');
+  setIsConnected(true);
+});
 
-    s.on('disconnect', () => {
-      console.warn('[SocketHook] Disconnected from market feed');
-      setIsConnected(false);
-    });
+s.on('connect_error', (error) => {
+  console.error('[SocketHook] Connection Error:', error.message);
+});
+
+
+s.on('disconnect', (reason) => {
+  console.warn('[SocketHook] Disconnected from market feed:', reason);
+  setIsConnected(false);
+});
 
     s.on('market:update', (data) => {
       setMarketData(data);
