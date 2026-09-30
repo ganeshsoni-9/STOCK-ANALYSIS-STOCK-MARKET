@@ -93,7 +93,8 @@ mongoose
   });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`🚀 TradeSense AI Server running on http://localhost:${PORT}`);
   console.log(`📊 Market Data Mode: ${process.env.MARKET_DATA_MODE || 'mock'}`);
