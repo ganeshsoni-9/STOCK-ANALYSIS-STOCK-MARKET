@@ -27,7 +27,7 @@ const allowedOrigins = [
   'http://192.168.1.16:5173',
   'http://192.168.31.233:5173',
   'http://10.206.239.146:5173',
-  'https://indian-stock-bearbull.netlify.app',
+  'https://stock-analysis-bearbull.netlify.app',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
