@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Market from './pages/Market';
 import StockScanner from './pages/StockScanner';
 import StockDetails from './pages/StockDetails';
+import IntradayTradePlan from './pages/IntradayTradePlan';
 import Watchlist from './pages/Watchlist';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
@@ -26,6 +27,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard socketData={marketData} />} />
             <Route path="/market" element={<Market socketData={marketData} />} />
+            <Route path="/trade-plan" element={<IntradayTradePlan socketData={marketData} />} />
+            <Route path="/trade-plan/:symbol" element={<IntradayTradePlan socketData={marketData} />} />
+            <Route path="/index/:symbol" element={<IntradayTradePlan socketData={marketData} />} />
             <Route path="/scanner" element={<StockScanner />} />
             <Route path="/stock/:symbol" element={<StockDetails />} />
             <Route path="/login" element={<Login />} />

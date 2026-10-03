@@ -62,7 +62,8 @@ export const marketApi = {
   getIndices: () => fetchApi('/market/indices'),
   getBreadth: () => fetchApi('/market/breadth'),
   getSectors: () => fetchApi('/market/sectors'),
-  getOverview: () => fetchApi('/market/overview')
+  getOverview: () => fetchApi('/market/overview'),
+  getTradePlan: (symbol = 'NIFTY 50') => fetchApi(`/market/trade-plan/${encodeURIComponent(symbol)}`)
 };
 
 export const stockApi = {

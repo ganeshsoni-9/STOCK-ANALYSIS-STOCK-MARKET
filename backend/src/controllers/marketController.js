@@ -54,3 +54,14 @@ exports.getOverview = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.getTradePlan = async (req, res) => {
+  try {
+    const symbol = req.params.symbol || 'NIFTY 50';
+    const plan = await marketService.getIntradayTradePlan(symbol);
+    res.json({ success: true, data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

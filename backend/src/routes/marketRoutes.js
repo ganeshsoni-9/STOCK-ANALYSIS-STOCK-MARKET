@@ -9,4 +9,9 @@ router.get('/breadth', marketController.getBreadth);
 router.get('/sectors', marketController.getSectors);
 router.get('/overview', marketController.getOverview);
 
+router.get('/trade-plan', marketController.getTradePlan);
+router.get('/trade-plan/:symbol', marketController.getTradePlan);
+router.get('/index/:symbol/trade-plan', marketController.getTradePlan);
+
 module.exports = router;
+

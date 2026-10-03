@@ -88,6 +88,34 @@ function initMarketSocket(io) {
       }
     });
 
+    // Trade Plan Real-time Subscriptions
+    socket.on('subscribeTradePlan', async (data) => {
+      try {
+        const rawSym = typeof data === 'string' ? data : data?.symbol;
+        if (!rawSym) return;
+        const normSym = marketService.normalizeSymbol(rawSym);
+        const roomName = `tradeplan_${normSym}`;
+        socket.join(roomName);
+
+        const planData = await marketService.getIntradayTradePlan(normSym);
+        socket.emit('tradePlan:update', planData);
+      } catch (err) {
+        console.error(`[Socket.IO] Error in subscribeTradePlan:`, err.message);
+      }
+    });
+
+    socket.on('unsubscribeTradePlan', (data) => {
+      try {
+        const rawSym = typeof data === 'string' ? data : data?.symbol;
+        if (!rawSym) return;
+        const normSym = marketService.normalizeSymbol(rawSym);
+        const roomName = `tradeplan_${normSym}`;
+        socket.leave(roomName);
+      } catch (err) {
+        console.error(`[Socket.IO] Error in unsubscribeTradePlan:`, err.message);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
     });
@@ -106,6 +134,13 @@ function initMarketSocket(io) {
         topBearish: overview.topBearish,
         updatedAt: new Date().toISOString()
       });
+
+      // Update active Trade Plan subscribers for NIFTY 50 and BANK NIFTY
+      const niftyPlan = await marketService.getIntradayTradePlan('NIFTY 50');
+      io.to('tradeplan_NIFTY 50').emit('tradePlan:update', niftyPlan);
+
+      const bankNiftyPlan = await marketService.getIntradayTradePlan('BANK NIFTY');
+      io.to('tradeplan_BANK NIFTY').emit('tradePlan:update', bankNiftyPlan);
     } catch (e) {
       console.error('[Socket.IO] Error broadcasting market updates:', e.message);
     }
