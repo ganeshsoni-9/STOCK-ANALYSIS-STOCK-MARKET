@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_URL;
+const RAW_API_URL = import.meta.env.VITE_API_URL;
+const DEFAULT_PROD_API = 'https://stock-analysis-stock-market-k51i.onrender.com/api';
+
+function getBaseUrl() {
+  let base = RAW_API_URL;
+  if (!base || base === 'undefined' || base === 'null' || base.trim() === '') {
+    base = DEFAULT_PROD_API;
+  }
+  return base.replace(/\/+$/, '');
+}
+
+function getFullUrl(endpoint) {
+  const baseUrl = getBaseUrl();
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${baseUrl}${cleanEndpoint}`;
+}
 
 export async function fetchApi(endpoint, options = {}) {
   try {
@@ -13,25 +28,47 @@ export async function fetchApi(endpoint, options = {}) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const fullUrl = getFullUrl(endpoint);
+
+    const res = await fetch(fullUrl, {
       ...options,
       headers
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
+      let errorMessage = res.statusText;
+      try {
+        const errorData = await res.json();
+        if (errorData && errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // Non-JSON error body
+      }
 
       if (res.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
 
-      throw new Error(
-        `API Error: ${errorData.message || res.statusText}`
-      );
+      throw new Error(`API Error [${res.status}]: ${errorMessage}`);
     }
 
-    return await res.json();
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await res.json();
+    }
+
+    const textData = await res.text();
+    if (textData.trim().startsWith('<')) {
+      throw new SyntaxError(`Server returned HTML instead of JSON. Expected API JSON response from ${fullUrl} but received HTML page.`);
+    }
+
+    try {
+      return JSON.parse(textData);
+    } catch (e) {
+      throw new Error(`Invalid JSON response from ${fullUrl}`);
+    }
 
   } catch (err) {
     console.error(`[API Call Failed] ${endpoint}`, err);

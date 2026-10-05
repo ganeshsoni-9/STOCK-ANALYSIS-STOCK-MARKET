@@ -36,7 +36,7 @@ class StockScannerService {
     const scannedStocks = await Promise.all(
       stockQuotes.map(async (stock) => {
         try {
-          const candles5M = await this.provider.getHistoricalCandles(stock.symbol, '5m', 60);
+          const candles5M = await this.provider.getHistoricalCandles(stock.symbol, timeframe, 60);
           const candles15M = await this.provider.getHistoricalCandles(stock.symbol, '15m', 60);
 
           const analysis5M = analyzeCandles(candles5M);
