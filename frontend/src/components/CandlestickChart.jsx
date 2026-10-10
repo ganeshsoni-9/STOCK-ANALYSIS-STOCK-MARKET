@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries, HistogramSeries, ColorType, CrosshairMode } from 'lightweight-charts';
 
-export default function CandlestickChart({ series = [], height = 300 }) {
+export default function CandlestickChart({ series = [], height = 300, breakoutLevels = null }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
   const volumeSeriesRef = useRef(null);
+  const priceLinesRef = useRef([]);
 
   const [legendData, setLegendData] = useState(null);
 
@@ -217,6 +218,49 @@ export default function CandlestickChart({ series = [], height = 300 }) {
       });
     }
   }, [series]);
+
+  // Draw 5M High / Low Price Lines if breakoutLevels provided
+  useEffect(() => {
+    if (!candlestickSeriesRef.current) return;
+
+    // Clean up previous lines
+    priceLinesRef.current.forEach((line) => {
+      try {
+        candlestickSeriesRef.current.removePriceLine(line);
+      } catch (e) {
+        // Ignore
+      }
+    });
+    priceLinesRef.current = [];
+
+    if (breakoutLevels?.refHigh) {
+      try {
+        const highLine = candlestickSeriesRef.current.createPriceLine({
+          price: breakoutLevels.refHigh,
+          color: '#10B981',
+          lineWidth: 1,
+          lineStyle: 2, // Dashed
+          axisLabelVisible: true,
+          title: '5M High'
+        });
+        priceLinesRef.current.push(highLine);
+      } catch (e) {}
+    }
+
+    if (breakoutLevels?.refLow) {
+      try {
+        const lowLine = candlestickSeriesRef.current.createPriceLine({
+          price: breakoutLevels.refLow,
+          color: '#F43F5E',
+          lineWidth: 1,
+          lineStyle: 2, // Dashed
+          axisLabelVisible: true,
+          title: '5M Low'
+        });
+        priceLinesRef.current.push(lowLine);
+      } catch (e) {}
+    }
+  }, [breakoutLevels, series]);
 
   // Determine change for legend
   const isBullish = legendData ? legendData.close >= legendData.open : true;

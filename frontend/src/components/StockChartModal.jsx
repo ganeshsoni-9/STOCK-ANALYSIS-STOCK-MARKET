@@ -10,9 +10,10 @@ import {
   CartesianGrid,
   ReferenceLine
 } from 'recharts';
-import { X, Loader2, AlertCircle, ArrowUpRight, ArrowDownRight, TrendingUp, CandlestickChart as CandlestickIcon } from 'lucide-react';
+import { X, Loader2, AlertCircle, ArrowUpRight, ArrowDownRight, TrendingUp, CandlestickChart as CandlestickIcon, Zap } from 'lucide-react';
 import { stockApi } from '../services/api';
 import CandlestickChart from './CandlestickChart';
+import { calculate5MinBreakoutAnalysis } from '../utils/breakoutRetestAnalysis';
 
 export default function StockChartModal({ symbol, stockSummary, isOpen, onClose }) {
   const [timeframe, setTimeframe] = useState('5m');
@@ -68,6 +69,15 @@ export default function StockChartModal({ symbol, stockSummary, isOpen, onClose 
     };
   }, [isOpen, symbol, timeframe]);
 
+  const breakoutAnalysis = React.useMemo(() => {
+    if (!series || series.length === 0) return null;
+    return calculate5MinBreakoutAnalysis(series, stockSummary?.ltp, {
+      source: stockSummary?.source,
+      symbol,
+      lastUpdated: stockSummary?.timestamp
+    });
+  }, [series, stockSummary?.ltp, stockSummary?.source, symbol, stockSummary?.timestamp]);
+
   if (!isOpen || !symbol) return null;
 
   const isPositive = (stockSummary?.changePercent ?? 0) >= 0;
@@ -76,6 +86,15 @@ export default function StockChartModal({ symbol, stockSummary, isOpen, onClose 
     ...c,
     time: c.timestamp ? new Date(c.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
   }));
+
+  const breakoutLevels = breakoutAnalysis?.isAvailable
+    ? {
+        refHigh: breakoutAnalysis.refHigh,
+        refLow: breakoutAnalysis.refLow,
+        entryPrice: breakoutAnalysis.entryPrice,
+        stopLoss: breakoutAnalysis.stopLoss
+      }
+    : null;
 
   const timeframes = ['1m', '3m', '5m', '15m', '30m'];
 
@@ -262,11 +281,17 @@ export default function StockChartModal({ symbol, stockSummary, isOpen, onClose 
                 <div>
                   {chartMode === 'line' ? (
                     <>
-                      <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 mb-2">
+                      <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono text-slate-400 mb-2">
                         <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-emerald-400"></span> Close Price</span>
                         <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-amber-400"></span> VWAP</span>
                         <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-sky-400"></span> EMA 9</span>
                         <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 bg-purple-400"></span> EMA 20</span>
+                        {breakoutLevels?.refHigh && (
+                          <span className="flex items-center gap-1 text-emerald-400 font-semibold"><span className="w-2.5 h-0.5 bg-emerald-400"></span> 5M High (₹{breakoutLevels.refHigh})</span>
+                        )}
+                        {breakoutLevels?.refLow && (
+                          <span className="flex items-center gap-1 text-rose-400 font-semibold"><span className="w-2.5 h-0.5 bg-rose-400"></span> 5M Low (₹{breakoutLevels.refLow})</span>
+                        )}
                       </div>
 
                       <div className="h-[300px] w-full">
@@ -284,6 +309,44 @@ export default function StockChartModal({ symbol, stockSummary, isOpen, onClose 
                             <Line type="monotone" dataKey="ema9" stroke="#38BDF8" strokeWidth={1} dot={false} name="EMA 9" />
                             <Line type="monotone" dataKey="ema20" stroke="#C084FC" strokeWidth={1} dot={false} name="EMA 20" />
                             <Bar dataKey="volume" fill="#1E293B" yAxisId="vol" opacity={0.3} />
+
+                            {/* 5-Minute High/Low Breakout & Retest Levels */}
+                            {breakoutLevels?.refHigh && (
+                              <ReferenceLine
+                                y={breakoutLevels.refHigh}
+                                stroke="#10B981"
+                                strokeDasharray="4 4"
+                                strokeWidth={1.5}
+                                label={{ value: `5M High: ₹${breakoutLevels.refHigh}`, fill: '#10B981', fontSize: 10, position: 'insideTopRight' }}
+                              />
+                            )}
+                            {breakoutLevels?.refLow && (
+                              <ReferenceLine
+                                y={breakoutLevels.refLow}
+                                stroke="#F43F5E"
+                                strokeDasharray="4 4"
+                                strokeWidth={1.5}
+                                label={{ value: `5M Low: ₹${breakoutLevels.refLow}`, fill: '#F43F5E', fontSize: 10, position: 'insideBottomRight' }}
+                              />
+                            )}
+                            {breakoutLevels?.entryPrice && (
+                              <ReferenceLine
+                                y={breakoutLevels.entryPrice}
+                                stroke="#38BDF8"
+                                strokeDasharray="2 2"
+                                strokeWidth={1.5}
+                                label={{ value: `Entry: ₹${breakoutLevels.entryPrice}`, fill: '#38BDF8', fontSize: 10, position: 'insideRight' }}
+                              />
+                            )}
+                            {breakoutLevels?.stopLoss && (
+                              <ReferenceLine
+                                y={breakoutLevels.stopLoss}
+                                stroke="#EF4444"
+                                strokeDasharray="2 2"
+                                strokeWidth={1.5}
+                                label={{ value: `SL: ₹${breakoutLevels.stopLoss}`, fill: '#EF4444', fontSize: 10, position: 'insideRight' }}
+                              />
+                            )}
                           </ComposedChart>
                         </ResponsiveContainer>
                       </div>
@@ -291,7 +354,7 @@ export default function StockChartModal({ symbol, stockSummary, isOpen, onClose 
                   ) : (
                     /* Lightweight-Charts TradingView Professional Candlestick View */
                     <div className="h-[320px] w-full">
-                      <CandlestickChart series={series} height={320} />
+                      <CandlestickChart series={series} height={320} breakoutLevels={breakoutLevels} />
                     </div>
                   )}
                 </div>

@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import DisclaimerBanner from '../components/DisclaimerBanner';
 import StockChart from '../components/StockChart';
 import OptionChain from '../components/optionChain/OptionChain';
+import BreakoutRetestCard from '../components/BreakoutRetestCard';
+import { calculate5MinBreakoutAnalysis } from '../utils/breakoutRetestAnalysis';
 import { stockApi, watchlistApi } from '../services/api';
 import { ArrowLeft, Bookmark, AlertTriangle, ShieldCheck, Zap, Info, Layers } from 'lucide-react';
 
@@ -67,6 +69,15 @@ export default function StockDetails() {
     }
   };
 
+  const breakoutAnalysis = React.useMemo(() => {
+    if (!details?.analysis?.series) return null;
+    return calculate5MinBreakoutAnalysis(details.analysis.series, details.stock?.ltp, {
+      source: details.stock?.source,
+      symbol: details.stock?.symbol || symbol,
+      lastUpdated: details.stock?.timestamp
+    });
+  }, [details?.analysis?.series, details?.stock?.ltp, details?.stock?.source, details?.stock?.symbol, details?.stock?.timestamp, symbol]);
+
   if (loading || !details) {
     return (
       <div className="p-8 text-center text-slate-400 font-mono">
@@ -78,6 +89,15 @@ export default function StockDetails() {
   const { stock, analysis, signalData, openingRange } = details;
   const latest = analysis?.latest || {};
   const isPositive = stock.changePercent >= 0;
+
+  const breakoutLevels = breakoutAnalysis?.isAvailable
+    ? {
+        refHigh: breakoutAnalysis.refHigh,
+        refLow: breakoutAnalysis.refLow,
+        entryPrice: breakoutAnalysis.entryPrice,
+        stopLoss: breakoutAnalysis.stopLoss
+      }
+    : null;
 
   return (
     <div className="space-y-4">
@@ -191,6 +211,7 @@ export default function StockDetails() {
           symbol={stock.symbol}
           timeframe={timeframe}
           onTimeframeChange={(tf) => setTimeframe(tf)}
+          breakoutLevels={breakoutLevels}
         />
       )}
 
@@ -226,6 +247,8 @@ export default function StockDetails() {
           </div>
 
           <div className="lg:col-span-2 space-y-4">
+            <BreakoutRetestCard analysis={breakoutAnalysis} symbol={stock.symbol} />
+
             <div className="glass-card p-4">
               <h2 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
                 Technical Indicators Matrix ({timeframe.toUpperCase()})
@@ -278,6 +301,7 @@ export default function StockDetails() {
             symbol={stock.symbol}
             timeframe={timeframe}
             onTimeframeChange={(tf) => setTimeframe(tf)}
+            breakoutLevels={breakoutLevels}
           />
 
           {/* 2-Column Grid: Signal & Scoring vs Technical Factor Grid */}
@@ -355,6 +379,9 @@ export default function StockDetails() {
 
             {/* Technical Indicators & Opening Range Grid */}
             <div className="lg:col-span-2 space-y-4">
+              {/* 5-Minute High/Low Breakout + Retest Analysis */}
+              <BreakoutRetestCard analysis={breakoutAnalysis} symbol={stock.symbol} />
+
               {/* Opening Range Card */}
               <div className="glass-card p-4">
                 <h2 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">

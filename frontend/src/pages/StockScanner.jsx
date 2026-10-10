@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DisclaimerBanner from '../components/DisclaimerBanner';
 import StockTable from '../components/StockTable';
 import { stockApi } from '../services/api';
-import { Filter, RefreshCw, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Filter, RefreshCw, Zap, TrendingUp, AlertTriangle, Activity } from 'lucide-react';
 
 export default function StockScanner() {
   const [activeTab, setActiveTab] = useState('OPEN_LOW'); // Default to OPEN_LOW or SIGNALS
@@ -55,10 +55,18 @@ export default function StockScanner() {
     loadStocks();
   }, [timeframe, activeTab]);
 
+  const breakoutStocks = stocks.filter((stk) => {
+    const isOrBreakout = stk.openingRange?.status?.includes('BREAKOUT') || stk.openingRange?.status?.includes('BREAKDOWN');
+    const isBullBreak = stk.signal?.includes('BULLISH') && (stk.distanceFromVWAP ?? 0) > 0.3;
+    const isBearBreak = stk.signal?.includes('BEARISH') && (stk.distanceFromVWAP ?? 0) < -0.3;
+    return isOrBreakout || isBullBreak || isBearBreak;
+  });
+
   const filteredSignalsStocks = stocks.filter((stk) => {
     if (signalFilter === 'BULLISH' && !stk.signal?.includes('BULLISH')) return false;
     if (signalFilter === 'BEARISH' && !stk.signal?.includes('BEARISH')) return false;
     if (signalFilter === 'STRONG' && !stk.signal?.startsWith('STRONG')) return false;
+    if (signalFilter === 'BREAKOUT' && !stk.openingRange?.status?.includes('BREAKOUT') && !stk.openingRange?.status?.includes('BREAKDOWN') && Math.abs(stk.distanceFromVWAP ?? 0) < 0.4) return false;
     if (rvolFilter === 'HIGH' && (stk.rvol ?? 0) < 1.5) return false;
     return true;
   });
@@ -68,7 +76,7 @@ export default function StockScanner() {
       <DisclaimerBanner isDemoMode={false} />
 
       {/* Scanner View Selection Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
         <button
           onClick={() => setActiveTab('OPEN_LOW')}
           className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition flex items-center gap-2 ${
@@ -82,6 +90,23 @@ export default function StockScanner() {
           {openLowStocks.length > 0 && activeTab === 'OPEN_LOW' && (
             <span className="bg-black/20 text-black px-1.5 py-0.5 rounded text-[10px]">
               {openLowStocks.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('BREAKOUT')}
+          className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition flex items-center gap-2 ${
+            activeTab === 'BREAKOUT'
+              ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          5M BREAKOUT SCANNER
+          {breakoutStocks.length > 0 && (
+            <span className={`px-1.5 py-0.5 rounded text-[10px] ${activeTab === 'BREAKOUT' ? 'bg-black/20 text-black' : 'bg-emerald-500/20 text-emerald-300'}`}>
+              {breakoutStocks.length}
             </span>
           )}
         </button>
@@ -104,11 +129,17 @@ export default function StockScanner() {
         <div>
           <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
             <Filter className="w-5 h-5 text-emerald-400" />
-            {activeTab === 'OPEN_LOW' ? 'OPEN = LOW SCANNER' : 'Liquid NSE Stock Scanner (100% Free Live Feed)'}
+            {activeTab === 'OPEN_LOW'
+              ? 'OPEN = LOW SCANNER'
+              : activeTab === 'BREAKOUT'
+              ? '5-Minute High/Low Breakout & Retest Scanner'
+              : 'Liquid NSE Stock Scanner (100% Free Live Feed)'}
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
             {activeTab === 'OPEN_LOW'
               ? "Stocks where today's Open equals today's Low"
+              : activeTab === 'BREAKOUT'
+              ? "Real-time 5M boundary breakouts — click any instrument to evaluate completed candle retest confirmation, SL and targets"
               : 'Multi-factor intraday momentum scanner with composite scoring'}
           </p>
         </div>
@@ -138,6 +169,7 @@ export default function StockScanner() {
                 className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500"
               >
                 <option value="ALL">All Signals</option>
+                <option value="BREAKOUT">5M Breakouts Only</option>
                 <option value="BULLISH">Bullish Only</option>
                 <option value="BEARISH">Bearish Only</option>
                 <option value="STRONG">Strong Signals Only</option>
@@ -184,6 +216,13 @@ export default function StockScanner() {
           subtitle="Stocks where today's Open equals today's Low"
           isOpenLowMode={true}
           emptyMessage="No Open = Low stocks found"
+        />
+      ) : activeTab === 'BREAKOUT' ? (
+        <StockTable
+          stocks={breakoutStocks}
+          title="⚡ 5-Minute High/Low Breakout & Retest Scanner"
+          subtitle="Stocks breaking beyond 5M boundary levels — click any instrument to view completed candle retest analysis"
+          emptyMessage="No active 5-Minute Breakout stocks detected currently in market session"
         />
       ) : (
         <StockTable

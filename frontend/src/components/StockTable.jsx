@@ -559,7 +559,19 @@ export default function StockTable({
                     </td>
 
                     <td className="py-3 px-3">
-                      {getSignalBadge(stk.signal, stk.score)}
+                      <div className="flex flex-col gap-1 items-start">
+                        {getSignalBadge(stk.signal, stk.score)}
+                        {stk.openingRange?.status?.includes('BREAKOUT') && (
+                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                            ⚡ 5M BREAKOUT
+                          </span>
+                        )}
+                        {stk.openingRange?.status?.includes('BREAKDOWN') && (
+                          <span className="text-[10px] text-rose-400 font-bold bg-rose-950/60 border border-rose-500/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                            ⚡ 5M BREAKDOWN
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-3 px-3 text-right">
