@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Activity, Cpu, Sliders, Bell, Bookmark, LayoutDashboard, Radio, LogIn, LogOut, Target } from 'lucide-react';
+import { Search, Activity, Cpu, Sliders, Bell, Bookmark, LayoutDashboard, Radio, LogIn, LogOut } from 'lucide-react';
 
 const POPULAR_SYMBOLS = ['RELIANCE', 'HDFCBANK', 'TCS', 'ICICIBANK', 'SBIN', 'INFY', 'BAJFINANCE', 'TATAMOTORS'];
 
@@ -58,7 +58,6 @@ export default function Navbar({ isConnected = true, lastUpdated }) {
 
   const navLinks = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Trade Plan', path: '/trade-plan/NIFTY%2050', icon: Target },
     { label: 'Market', path: '/market', icon: Activity },
     { label: 'Stock Scanner', path: '/scanner', icon: Cpu },
     { label: 'Watchlist', path: '/watchlist', icon: Bookmark },
